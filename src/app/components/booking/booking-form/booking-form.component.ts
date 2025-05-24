@@ -1,130 +1,108 @@
-// src/app/components/booking/booking-form/booking-form.component.ts
 import { Component, OnInit } from '@angular/core';
-import { FormArray, FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Booking, CarBooking } from '../../../models/booking';
+import { Router, ActivatedRoute } from '@angular/router';
 import { BookingService } from '../../../services/booking.service';
-import { CarService } from '../../../services/car.service';
 import { Car } from '../../../models/car';
-import { ToastrService } from 'ngx-toastr';
-import { Router } from '@angular/router';
-import { CommonModule, DatePipe } from '@angular/common';
-import { MatButtonModule } from '@angular/material/button';
-import { MatInputModule } from '@angular/material/input';
-import { MatNativeDateModule } from '@angular/material/core';
-
+import { Booking, CarBooking } from '../../../models/booking';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 @Component({
   selector: 'app-booking-form',
-   imports: [
-   CommonModule,
-    FormsModule,
-    ReactiveFormsModule, 
-    MatButtonModule,
-    MatInputModule,
-    MatNativeDateModule
-  ],
+  imports: [CommonModule, FormsModule],
+
   templateUrl: './booking-form.component.html',
   styleUrls: ['./booking-form.component.css']
 })
 export class BookingFormComponent implements OnInit {
-  bookingForm: FormGroup;
-  cars: Car[] = [];
-  nationalities: string[] = []; // Initialize as empty array
+  nationalities: string[] = []; 
+  isLoadingNationalities = false;
+  selectedCars: Car[] = [];
+  booking: Booking = {
+    customerName: '',
+    customerNationality: '',
+    customerDrivingLicense: '',
+    payment: '',
+    from: new Date(),
+    to: new Date(),
+    carBookings: [] as CarBooking[]
+  };
+
   constructor(
-    private fb: FormBuilder,
-    private bookingService: BookingService,
-    private carService: CarService,
-    private toastr: ToastrService,
-    private router: Router
-  ) {
-    this.bookingForm = this.fb.group({
-      id: [null],
-      customerName: ['', Validators.required],
-      customerNationality: ['', Validators.required],
-      customerDrivingLicense: ['', Validators.required],
-      payment: ['', Validators.required],
-      from: ['', Validators.required],
-      to: ['', Validators.required],
-      carBookings: this.fb.array([])
-    });
-  }
-
-  ngOnInit(): void {
-    this.loadCars();
-    this.addCarBooking();
-      this.loadNationalities(); 
-
-  }
- loadNationalities(): void {
-    this.bookingService.loadNationalities().subscribe({
-      next: (res) => {
-        if (res.status && Array.isArray(res.data)) {
-          this.nationalities = res.data;
-        } else {
-          this.toastr.warning('Unexpected response format for nationalities');
-          this.setDefaultNationalities();
-        }
-      },
-      error: (err) => {
-        console.error('Failed to load nationalities', err);
-        //this.toastr.error('Failed to load nationalities');
-        this.setDefaultNationalities();
-      }
-    });
-  }
-
-  private setDefaultNationalities(): void {
-    this.nationalities = ['Egyptian', 'American', 'British', 'French', 'German', 'Other'];
-  }
-  get carBookings(): FormArray {
-    return this.bookingForm.get('carBookings') as FormArray;
-  }
-
-  loadCars(): void {
-    this.carService.getAllCars().subscribe(response => {
-      this.cars = response.items;
-    });
-  }
-
-  addCarBooking(): void {
-    const carBookingGroup = this.fb.group({
-      carId: ['', Validators.required],
-      quentity: [1, [Validators.required, Validators.min(1)]]
-    });
-
-    this.carBookings.push(carBookingGroup);
-  }
-
-  removeCarBooking(index: number): void {
-    this.carBookings.removeAt(index);
-  }
-
-  getCarName(carId: string): string {
-    const car = this.cars.find(c => c.id === carId);
-    return car ? car.modelName : '';
-  }
-
-  onSubmit(): void {
-    if (this.bookingForm.valid) {
-      const booking: Booking = this.bookingForm.value;
-      
-      // Map car bookings to include car names
-      booking.carBookings = booking.carBookings.map(cb => ({
-        ...cb,
-        carName: this.getCarName(cb.carId)
-      }));
-
-      this.bookingService.createOrUpdateBooking(booking).subscribe({
-        next: () => {
-          this.toastr.success('Booking saved successfully');
-          this.router.navigate(['/bookings']);
-        },
-        error: (err) => {
-          this.toastr.error('Error saving booking');
-          console.error(err);
-        }
-      });
-    } else {
-      this.toastr.warning('Please fill all required fields');
+    private route: ActivatedRoute,
+    public router: Router, 
+    private bookingService: BookingService
+  ) { }
+  validateQuantity(item: CarBooking): void {
+    if (item.quentity < 1) {
+      item.quentity = 1;
     }
   }
+
+  isFormValid(): boolean {
+    return (
+      this.booking.customerName.trim() !== '' &&
+      this.booking.customerNationality.trim() !== '' &&
+      this.booking.customerDrivingLicense.trim() !== '' &&
+      this.booking.payment.trim() !== '' &&
+      this.booking.from &&
+      this.booking.to &&
+      this.booking.carBookings.every(item => item.quentity >= 1)
+    );
+  }
+loadNationalities(): void {
+  this.isLoadingNationalities = true;
+  this.bookingService.loadNationalities().subscribe({
+    next: (response) => {
+      console.log('Nationalities loaded:', response);
+             this.nationalities = response
+
+      this.isLoadingNationalities = false;
+    },
+    error: (err) => {
+      console.error('Failed to load nationalities', err);
+      this.nationalities = [];
+      this.isLoadingNationalities = false;
+    }
+  });
+}
+  ngOnInit(): void {
+    this.loadNationalities();
+    const state = history.state;
+    this.selectedCars = state.selectedCars || [];
+
+    if (this.selectedCars.length === 0) {
+      this.router.navigate(['/cars']);
+    }
+
+    this.booking.carBookings = this.selectedCars.map(car => ({
+      carId: car.id,
+      carName: `${car.brand} ${car.modelName}`,
+      quentity: 1 
+    }));
+  }
+
+submitBooking(): void {
+    const createBookingDto = {
+      from: new Date(this.booking.from),
+      to: new Date(this.booking.to),
+      customerName: this.booking.customerName,
+      customerNationality: this.booking.customerNationality,
+      customerDrivingLicense: this.booking.customerDrivingLicense,
+      payment: this.booking.payment,
+      cars: this.booking.carBookings.map(car => ({
+        carId: car.carId,
+        quentity: car.quentity  
+      }))
+    };
+    this.bookingService.createOrUpdateBooking(createBookingDto).subscribe({
+      next: (response) => {
+        alert('Booking created successfully!');
+        this.router.navigate(['/bookings']);
+      },
+      error: (response) => {
+        const errorMsg = response?.error?.message || response?.error || 'Unknown error';
+      console.error('Booking failed', errorMsg);
+      alert('Booking failed: ' + errorMsg);
+      }
+    });
+  }  
 }

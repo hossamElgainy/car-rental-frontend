@@ -19,3 +19,34 @@
   width: 40px;
   padding-right: 12px;
 }
+/* Disabled row styling */
+.disabled-row {
+  background-color: #f5f5f5;
+  opacity: 0.7;
+  pointer-events: none;
+  cursor: not-allowed;
+}
+
+/* Selected row styling */
+.selected {
+  background-color: #e3f2fd !important;
+}
+
+/* Unavailable model name styling */
+.model-name-unavailable {
+  text-decoration: line-through;
+  color: #9e9e9e;
+}
+
+.available-count-zero {
+  color: #f44336;
+  font-weight: bold;
+}
+
+mat-checkbox[disabled] {
+  opacity: 0.7;
+}
+
+.mat-row:not(.disabled-row):hover {
+  background-color: #f5f5f5;
+}

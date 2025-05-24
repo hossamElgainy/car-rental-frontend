@@ -1,110 +1,140 @@
-<!-- src/app/components/booking/booking-form/booking-form.component.html -->
 <div class="container mt-4">
   <div class="card">
-    <div class="card-header">
-      <h2>New Booking</h2>
+    <div class="card-header bg-primary text-white">
+      <h2 class="mb-0">New Booking</h2>
     </div>
     <div class="card-body">
-      <form [formGroup]="bookingForm" (ngSubmit)="onSubmit()">
-        <!-- Customer Information -->
-        <div class="row mb-4">
-          <div class="col-md-6">
-            <div class="form-group">
-              <label for="customerName">Customer Name</label>
-              <input type="text" class="form-control" id="customerName" 
-                     formControlName="customerName" required>
+      <!-- Selected Cars Section -->
+      <div class="mb-4">
+        <h4 class="border-bottom pb-2 mb-3">Selected Vehicles</h4>
+        <div class="table-responsive">
+          <table class="table table-hover">
+            <thead class="table-light">
+              <tr>
+                <th>Vehicle</th>
+                <th class="text-end">Quantity</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let item of booking.carBookings">
+                <td>
+                  <strong>{{ item.carName }}</strong>
+                </td>
+                <td>
+                  <div class="d-flex justify-content-end">
+                    <input type="number" class="form-control w-50 text-end"
+                           [(ngModel)]="item.quentity"
+                           name="quantity-{{item.carId}}"
+                           min="1" max="10" required
+                           (change)="validateQuantity(item)">
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Customer Details Section -->
+      <div class="mb-4">
+        <h4 class="border-bottom pb-2 mb-3">Customer Information</h4>
+        <form (ngSubmit)="submitBooking()">
+          <div class="row g-3">
+            <!-- Customer Name -->
+            <div class="col-12 col-md-6">
+              <label class="form-label">Full Name</label>
+              <input type="text" class="form-control"
+                     [(ngModel)]="booking.customerName"
+                     name="customerName" required>
             </div>
-          </div>
-          <div class="col-md-6">
-            <div class="form-group">
-              <label for="customerNationality">Nationality</label>
-              <select class="form-control" id="customerNationality" 
-                      formControlName="customerNationality" required>
-                <option value="">Select Nationality</option>
-                <option *ngFor="let nationality of nationalities" [value]="nationality">
-                  {{nationality}}
+
+            <!-- Nationality -->
+            <div class="col-12 col-md-6">
+              <label for="nationalitySelect" class="form-label fw-bold">Nationality</label>
+              <select id="nationalitySelect"
+                      class="form-select"
+                      [(ngModel)]="booking.customerNationality"
+                      name="customerNationality"
+                      required>
+                <option value="" disabled>-- Select Nationality --</option>
+                <option *ngFor="let nationality of nationalities"
+                        [value]="nationality">
+                  {{ nationality }}
                 </option>
+              </select>
+              <div *ngIf="isLoadingNationalities" class="mt-2 text-muted">
+                <div class="spinner-border spinner-border-sm" role="status">
+                  <span class="visually-hidden">Loading...</span>
+                </div>
+                <span class="ms-2">Loading nationalities...</span>
+              </div>
+              <div *ngIf="!isLoadingNationalities && nationalities.length === 0" class="text-danger small mt-1">
+                No nationalities available
+              </div>
+              <div *ngIf="booking.customerNationality" class="mt-2 alert alert-info py-1 px-2">
+                <strong>Selected Nationality:</strong> {{ booking.customerNationality }}
+              </div>
+            </div>
+
+            <!-- Driving License -->
+            <div class="col-12 col-md-6">
+              <label class="form-label">Driving License Number</label>
+              <input type="text" class="form-control"
+                     [(ngModel)]="booking.customerDrivingLicense"
+                     name="customerDrivingLicense" required>
+            </div>
+
+            <!-- Payment Method -->
+            <div class="col-12 col-md-6">
+              <label class="form-label">Payment Method</label>
+              <select class="form-select"
+                      [(ngModel)]="booking.payment"
+                      name="payment" required>
+                <option value="">Select Payment</option>
+                <option value="Cash">Cash</option>
+                <option value="Credit Card">Credit Card</option>
+                <option value="Bank Transfer">Bank Transfer</option>
               </select>
             </div>
           </div>
-        </div>
+        </form>
+      </div>
 
-        <div class="row mb-4">
-          <div class="col-md-6">
-            <div class="form-group">
-              <label for="customerDrivingLicense">Driving License No.</label>
-              <input type="text" class="form-control" id="customerDrivingLicense" 
-                     formControlName="customerDrivingLicense" required>
-            </div>
+      <!-- Rental Period Section -->
+      <div class="mb-4">
+        <h4 class="border-bottom pb-2 mb-3">Rental Period</h4>
+        <div class="row g-3">
+          <!-- Start Date -->
+          <div class="col-12 col-md-6">
+            <label class="form-label">Pick-up Date & Time</label>
+            <input type="datetime-local" class="form-control"
+                   [(ngModel)]="booking.from"
+                   name="from" required>
           </div>
-          <div class="col-md-6">
-            <div class="form-group">
-              <label for="payment">Advanced Payment</label>
-              <input type="text" class="form-control" id="payment" 
-                     formControlName="payment" required>
-            </div>
-          </div>
-        </div>
 
-        <div class="row mb-4">
-          <div class="col-md-6">
-            <div class="form-group">
-              <label for="from">From Date</label>
-              <input type="datetime-local" class="form-control" id="from" 
-                     formControlName="from" required>
-            </div>
-          </div>
-          <div class="col-md-6">
-            <div class="form-group">
-              <label for="to">To Date</label>
-              <input type="datetime-local" class="form-control" id="to" 
-                     formControlName="to" required>
-            </div>
+          <!-- End Date -->
+          <div class="col-12 col-md-6">
+            <label class="form-label">Return Date & Time</label>
+            <input type="datetime-local" class="form-control"
+                   [(ngModel)]="booking.to"
+                   name="to" required
+                   [min]="booking.from">
           </div>
         </div>
+      </div>
 
-        <!-- Car Bookings -->
-        <div formArrayName="carBookings">
-          <div class="card mb-3" *ngFor="let carBooking of carBookings.controls; let i = index" [formGroupName]="i">
-            <div class="card-header d-flex justify-content-between align-items-center">
-              <h5 class="mb-0">Car {{i + 1}}</h5>
-              <button type="button" class="btn btn-danger btn-sm" 
-                      (click)="removeCarBooking(i)" *ngIf="carBookings.length > 1">
-                Remove
-              </button>
-            </div>
-            <div class="card-body">
-              <div class="row">
-                <div class="col-md-6">
-                  <div class="form-group">
-                    <label [for]="'carId' + i">Car Model</label>
-                    <select class="form-control" [id]="'carId' + i" formControlName="carId" required>
-                      <option value="">Select Car</option>
-                      <option *ngFor="let car of cars" [value]="car.id">
-                        {{car.brand}} {{car.modelName}} ({{car.modelYear}})
-                      </option>
-                    </select>
-                  </div>
-                </div>
-                <div class="col-md-6">
-                  <div class="form-group">
-                    <label [for]="'quentity' + i">Quantity</label>
-                    <input type="number" class="form-control" [id]="'quentity' + i" 
-                           formControlName="quentity" min="1" required>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="d-flex justify-content-between mt-4">
-          <button type="button" class="btn btn-success" (click)="addCarBooking()">
-            Add Another Car
-          </button>
-          <button type="submit" class="btn btn-primary">Submit Booking</button>
-        </div>
-      </form>
+      <!-- Action Buttons -->
+      <div class="d-flex flex-column flex-md-row justify-content-between border-top pt-3 gap-2">
+        <button type="button" class="btn btn-outline-secondary"
+                (click)="router.navigate(['/cars'])">
+          <i class="bi bi-arrow-left me-2"></i>Back to Cars
+        </button>
+        <button type="submit" class="btn btn-primary px-4"
+                [disabled]="!isFormValid()"
+                (click)="submitBooking()">
+          <i class="bi bi-check-circle me-2"></i>Confirm Booking
+        </button>
+      </div>
     </div>
   </div>
 </div>

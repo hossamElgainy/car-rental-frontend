@@ -1,7 +1,7 @@
 // src/app/services/booking.service.ts
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { catchError, map, Observable, of } from 'rxjs';
 import { Booking, BookingListResponse, CarBooking } from '../models/booking';
 import { environment } from '../../environments/environment';
 
@@ -13,9 +13,21 @@ export class BookingService {
   nationalities: string[] = [];
 
   constructor(private http: HttpClient) { }
-  loadNationalities(): Observable<any> {
-    return this.http.get<any>(`${environment.apiUrl}/api/Countries/Countries`);
-  }
+loadNationalities(): Observable<string[]> {
+  return this.http.get<any>(`${environment.apiUrl}/api/Countries/Countries`)
+    .pipe(
+      map(response => {
+        if (response && Array.isArray(response.data)) {
+          return response.data;
+        }
+        return [];
+      }),
+      catchError(error => {
+        console.error('Error loading nationalities:', error);
+        return of([]);
+      })
+    );
+}
   getAllBookings(
     modelName: string = '',
     customerName: string = '',
@@ -52,7 +64,7 @@ export class BookingService {
     return this.http.get<BookingListResponse>(`${this.apiUrl}/GetAll`, { params });
   }
 
-  createOrUpdateBooking(booking: Booking): Observable<Booking> {
-    return this.http.post<Booking>(`${this.apiUrl}/AddOrEditNewBooking`, booking);
+  createOrUpdateBooking(booking: any): Observable<Booking> {
+    return this.http.post<any>(`${this.apiUrl}/AddOrEditNewBooking`, booking);
   }
 }

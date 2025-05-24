@@ -1,0 +1,8 @@
+select.form-control {
+  cursor: pointer;
+}
+
+.loading-indicator {
+  color: #666;
+  font-style: italic;
+}

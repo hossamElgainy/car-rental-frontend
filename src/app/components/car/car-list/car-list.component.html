@@ -2,11 +2,11 @@
   <div class="card">
     <div class="card-header d-flex justify-content-between align-items-center">
       <h2>Available Cars</h2>
-     <button mat-raised-button color="primary" 
-        (click)="bookSelectedCars()"
-        [disabled]="selectedCars.length === 0">
-  Book Now ({{selectedCars.length}})
-</button>
+      <button mat-raised-button color="primary" 
+              (click)="bookSelectedCars()"
+              [disabled]="selectedCars.length === 0">
+        Book Now ({{selectedCars.length}})
+      </button>
     </div>
     <div class="card-body">
       <div class="row mb-3">
@@ -16,7 +16,6 @@
         </div>
         <div class="col-md-4">
           <div class="form-group">
-            <label for="brandFilter">Brand</label>
             <select id="brandFilter" class="form-control" 
                     [(ngModel)]="selectedBrandId" (change)="applyFilters()">
               <option value="">All Brands</option>
@@ -47,24 +46,27 @@
           <!-- Selection Column -->
           <ng-container matColumnDef="select">
             <th mat-header-cell *matHeaderCellDef>
-
               <mat-checkbox (change)="toggleAllSelection($event)"
                            [checked]="allSelected()"
                            [indeterminate]="someSelected()">
               </mat-checkbox>
             </th>
             <td mat-cell *matCellDef="let car">
-            <mat-checkbox 
-  [(ngModel)]="car.selected"
-  (ngModelChange)="updateSelectedCars()"> <!-- Update when value changes -->
-</mat-checkbox>
+              <mat-checkbox 
+                [(ngModel)]="car.selected"
+                (ngModelChange)="updateSelectedCars()"
+                [disabled]="car.availableCount === 0">
+              </mat-checkbox>
             </td>
           </ng-container>
 
           <!-- Model Name Column -->
           <ng-container matColumnDef="modelName">
             <th mat-header-cell *matHeaderCellDef> Model Name </th>
-            <td mat-cell *matCellDef="let car"> {{car.modelName}} </td>
+            <td mat-cell *matCellDef="let car" 
+                [class.model-name-unavailable]="car.availableCount === 0">
+              {{car.modelName}}
+            </td>
           </ng-container>
 
           <!-- Brand Column -->
@@ -94,11 +96,15 @@
           <!-- Available Count Column -->
           <ng-container matColumnDef="availableCount">
             <th mat-header-cell *matHeaderCellDef> Available </th>
-            <td mat-cell *matCellDef="let car"> {{car.availableCount}} </td>
+            <td mat-cell *matCellDef="let car" 
+                [class.available-count-zero]="car.availableCount === 0">
+              {{car.availableCount === 0 ? 'Sold Out' : car.availableCount}}
+            </td>
           </ng-container>
 
           <tr mat-header-row *matHeaderRowDef="displayedColumnsWithSelect"></tr>
           <tr mat-row *matRowDef="let row; columns: displayedColumnsWithSelect;"
+              [class.disabled-row]="row.availableCount === 0"
               [class.selected]="row.selected">
           </tr>
         </table>

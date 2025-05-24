@@ -85,10 +85,10 @@ export class CarListComponent implements OnInit {
       this.pageIndex + 1
     ).subscribe({
       next: (response) => {
-       this.dataSource.data = response.items.map(car => ({
-  ...car,
-  selected: false
-}));
+        this.dataSource.data = response.items.map(car => ({
+          ...car,
+          selected: false
+        }));
         this.totalCount = response.totalCount;
         this.updateSelectedCars();
         this.isLoading = false;
@@ -101,46 +101,48 @@ export class CarListComponent implements OnInit {
     });
   }
 
-toggleCarSelection(car: Car & {selected?: boolean}): void {
-  car.selected = !car.selected;
-  console.log('Toggled car:', car.id, 'New selected state:', car.selected); // Debug
-  this.updateSelectedCars();
-}
-
-  toggleAllSelection(event: MatCheckboxChange): void {
-    const isChecked = event.checked;
-    this.dataSource.data.forEach(car => car.selected = isChecked);
+  toggleCarSelection(car: Car & {selected?: boolean}): void {
+    if (car.availableCount === 0) return;
+    car.selected = !car.selected;
     this.updateSelectedCars();
   }
 
-updateSelectedCars(): void {
-  const selected = this.dataSource.data.filter(car => car.selected);
-  console.log('Filtered selected cars:', selected); // Debug
-  this.selectedCars = selected;
-  this.cdr.detectChanges();
-}
+  toggleAllSelection(event: MatCheckboxChange): void {
+    const isChecked = event.checked;
+    this.dataSource.data.forEach(car => {
+      if (car.availableCount > 0) {
+        car.selected = isChecked;
+      }
+    });
+    this.updateSelectedCars();
+  }
+
+  updateSelectedCars(): void {
+    this.selectedCars = this.dataSource.data.filter(car => car.selected && car.availableCount > 0);
+    this.cdr.detectChanges();
+  }
 
   allSelected(): boolean {
-    return this.dataSource.data.length > 0 && 
-           this.dataSource.data.every(car => car.selected);
+    const availableCars = this.dataSource.data.filter(car => car.availableCount > 0);
+    return availableCars.length > 0 && 
+           availableCars.every(car => car.selected);
   }
 
   someSelected(): boolean {
-    return this.dataSource.data.some(car => car.selected) && 
+    const availableCars = this.dataSource.data.filter(car => car.availableCount > 0);
+    return availableCars.some(car => car.selected) && 
            !this.allSelected();
   }
 
-bookSelectedCars(): void {
-  if (this.selectedCars.length === 0) {
-    alert('Please select at least one car');
-    return;
+  bookSelectedCars(): void {
+    if (this.selectedCars.length === 0) {
+      alert('Please select at least one available car');
+      return;
+    }
+    this.router.navigate(['/bookings/new'], {
+      state: { selectedCars: this.selectedCars }
+    });
   }
-  
-  // Navigate to booking page with selected cars
-  this.router.navigate(['/bookings/new'], {
-    state: { selectedCars: this.selectedCars }
-  });
-}
 
   onPageChange(event: PageEvent): void {
     this.pageSize = event.pageSize;

@@ -1,4 +1,3 @@
-// src/app/components/booking/booking-details/booking-details.component.ts
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { Booking } from '../../../models/booking';
