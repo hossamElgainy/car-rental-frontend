@@ -1,19 +1,20 @@
-// src/app/components/car/car-list/car-list.component.ts
-import { Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit, ViewChild } from '@angular/core';
 import { Car, CarListResponse } from '../../../models/car';
 import { CarService } from '../../../services/car.service';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
 import { MatPaginator, MatPaginatorModule, PageEvent } from '@angular/material/paginator';
-import { ViewChild } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatInputModule } from '@angular/material/input';
 import { CommonModule, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Brand } from '../../../models/brand';
 import { BrandService } from '../../../services/brand.service';
+import { MatCheckboxChange, MatCheckboxModule } from '@angular/material/checkbox';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-car-list',
+  standalone: true,
   imports: [
     CommonModule,
     FormsModule,
@@ -21,33 +22,44 @@ import { BrandService } from '../../../services/brand.service';
     MatPaginatorModule,
     MatInputModule,
     MatButtonModule,
-  
+    MatCheckboxModule,
   ],
   templateUrl: './car-list.component.html',
   styleUrls: ['./car-list.component.css']
 })
 export class CarListComponent implements OnInit {
   displayedColumns: string[] = ['modelName', 'brand', 'modelType', 'modelYear', 'power', 'availableCount'];
-  dataSource = new MatTableDataSource<Car>();
+  displayedColumnsWithSelect = ['select', ...this.displayedColumns];
+  
+  dataSource = new MatTableDataSource<Car & {selected?: boolean}>([]); 
+  selectedCars: Car[] = [];
   brands: Brand[] = [];
   isLoadingBrands = false;
+  isLoading = false;
+  
   totalCount = 0;
   pageSize = 10;
   pageIndex = 0;
   
   modelNameFilter = '';
-  selectedBrandId = ''; 
+  selectedBrandId = '';
   modelYearFilter: number | null = null;
 
   @ViewChild(MatPaginator) paginator!: MatPaginator;
 
-  constructor(private carService: CarService,private brandService: BrandService) { }
+  constructor(
+    private carService: CarService,
+    private brandService: BrandService,
+    private router: Router,
+    private cdr: ChangeDetectorRef
+  ) { }
 
   ngOnInit(): void {
     this.loadCars();
     this.loadBrands();
   }
-loadBrands(): void {
+
+  loadBrands(): void {
     this.isLoadingBrands = true;
     this.brandService.getAllBrands().subscribe({
       next: (response) => {
@@ -62,18 +74,73 @@ loadBrands(): void {
       }
     });
   }
+
   loadCars(): void {
+    this.isLoading = true;
     this.carService.getAllCars(
       this.modelNameFilter,
-      this.selectedBrandId, // Changed from brandIdFilter
+      this.selectedBrandId,
       this.modelYearFilter,
       this.pageSize,
       this.pageIndex + 1
-    ).subscribe(response => {
-      this.dataSource.data = response.items;
-      this.totalCount = response.totalCount;
+    ).subscribe({
+      next: (response) => {
+       this.dataSource.data = response.items.map(car => ({
+  ...car,
+  selected: false
+}));
+        this.totalCount = response.totalCount;
+        this.updateSelectedCars();
+        this.isLoading = false;
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        console.error('Failed to load cars', err);
+        this.isLoading = false;
+      }
     });
   }
+
+toggleCarSelection(car: Car & {selected?: boolean}): void {
+  car.selected = !car.selected;
+  console.log('Toggled car:', car.id, 'New selected state:', car.selected); // Debug
+  this.updateSelectedCars();
+}
+
+  toggleAllSelection(event: MatCheckboxChange): void {
+    const isChecked = event.checked;
+    this.dataSource.data.forEach(car => car.selected = isChecked);
+    this.updateSelectedCars();
+  }
+
+updateSelectedCars(): void {
+  const selected = this.dataSource.data.filter(car => car.selected);
+  console.log('Filtered selected cars:', selected); // Debug
+  this.selectedCars = selected;
+  this.cdr.detectChanges();
+}
+
+  allSelected(): boolean {
+    return this.dataSource.data.length > 0 && 
+           this.dataSource.data.every(car => car.selected);
+  }
+
+  someSelected(): boolean {
+    return this.dataSource.data.some(car => car.selected) && 
+           !this.allSelected();
+  }
+
+bookSelectedCars(): void {
+  if (this.selectedCars.length === 0) {
+    alert('Please select at least one car');
+    return;
+  }
+  
+  // Navigate to booking page with selected cars
+  this.router.navigate(['/bookings/new'], {
+    state: { selectedCars: this.selectedCars }
+  });
+}
 
   onPageChange(event: PageEvent): void {
     this.pageSize = event.pageSize;
@@ -91,5 +158,9 @@ loadBrands(): void {
     this.selectedBrandId = '';
     this.modelYearFilter = null;
     this.applyFilters();
+  }
+
+  trackByCarId(index: number, car: Car): string {
+    return car.id;
   }
 }

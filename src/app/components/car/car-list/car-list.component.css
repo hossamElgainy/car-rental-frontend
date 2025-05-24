@@ -1,0 +1,21 @@
+.mat-row.selected {
+  background-color: rgba(0, 0, 0, 0.04);
+}
+
+.mat-checkbox {
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+.mat-checkbox-inner-container {
+  z-index: 1;
+}
+
+.card-header button {
+  margin-left: auto;
+}
+
+.mat-column-select {
+  width: 40px;
+  padding-right: 12px;
+}

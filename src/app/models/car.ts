@@ -1,4 +1,4 @@
-// src/app/models/car.model.ts
+
 export interface Car {
   id: string;
   modelName: string;
@@ -8,6 +8,7 @@ export interface Car {
   power: number;
   totalCount: number;
   availableCount: number;
+  selected?: boolean;
 }
 
 export interface CarListResponse {

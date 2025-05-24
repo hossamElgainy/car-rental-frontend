@@ -1,80 +1,112 @@
-<!-- src/app/components/car/car-list/car-list.component.html -->
 <div class="container mt-4">
-    <div class="card">
-        <div class="card-header">
-            <h2>Available Cars</h2>
-            <p class="text-muted">Search and filter available cars for booking</p>
-        </div>
-        <div class="card-body">
-            <div class="row mb-3">
-                <div class="col-md-4">
-                    <input type="text" class="form-control" placeholder="Model Name" [(ngModel)]="modelNameFilter"
-                        (keyup.enter)="applyFilters()">
-                </div>
-                <div class="col-md-4">
-                    <select id="brandFilter" class="form-control" [(ngModel)]="selectedBrandId">
-                        <option value="">All Brands</option>
-                        <option *ngFor="let brand of brands" [value]="brand.id">
-                            {{ brand.name }}
-                        </option>
-                    </select>
-                </div>
-                <div class="col-md-3">
-                    <input type="number" class="form-control" placeholder="Model Year" [(ngModel)]="modelYearFilter"
-                        (keyup.enter)="applyFilters()">
-                </div>
-                <div class="col-md-2">
-                    <button class="btn btn-primary me-2" (click)="applyFilters()">Search</button>
-                    <button class="btn btn-secondary" (click)="clearFilters()">Clear</button>
-                </div>
-            </div>
-
-            <div class="table-responsive">
-                <table mat-table [dataSource]="dataSource" class="mat-elevation-z8">
-                    <!-- Model Name Column -->
-                    <ng-container matColumnDef="modelName">
-                        <th mat-header-cell *matHeaderCellDef> Model Name </th>
-                        <td mat-cell *matCellDef="let car"> {{car.modelName}} </td>
-                    </ng-container>
-
-                    <!-- Brand Column -->
-                    <ng-container matColumnDef="brand">
-                        <th mat-header-cell *matHeaderCellDef> Brand </th>
-                        <td mat-cell *matCellDef="let car"> {{car.brand}} </td>
-                    </ng-container>
-
-                    <!-- Model Type Column -->
-                    <ng-container matColumnDef="modelType">
-                        <th mat-header-cell *matHeaderCellDef> Type </th>
-                        <td mat-cell *matCellDef="let car"> {{car.modelType}} </td>
-                    </ng-container>
-
-                    <!-- Model Year Column -->
-                    <ng-container matColumnDef="modelYear">
-                        <th mat-header-cell *matHeaderCellDef> Year </th>
-                        <td mat-cell *matCellDef="let car"> {{car.modelYear}} </td>
-                    </ng-container>
-
-                    <!-- Power Column -->
-                    <ng-container matColumnDef="power">
-                        <th mat-header-cell *matHeaderCellDef> Power (HP) </th>
-                        <td mat-cell *matCellDef="let car"> {{car.power}} </td>
-                    </ng-container>
-
-                    <!-- Available Count Column -->
-                    <ng-container matColumnDef="availableCount">
-                        <th mat-header-cell *matHeaderCellDef> Available </th>
-                        <td mat-cell *matCellDef="let car"> {{car.availableCount}} </td>
-                    </ng-container>
-
-                    <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-                    <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
-                </table>
-            </div>
-
-            <mat-paginator [length]="totalCount" [pageSize]="pageSize" [pageSizeOptions]="[5, 10, 25, 100]"
-                (page)="onPageChange($event)" showFirstLastButtons>
-            </mat-paginator>
-        </div>
+  <div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+      <h2>Available Cars</h2>
+     <button mat-raised-button color="primary" 
+        (click)="bookSelectedCars()"
+        [disabled]="selectedCars.length === 0">
+  Book Now ({{selectedCars.length}})
+</button>
     </div>
+    <div class="card-body">
+      <div class="row mb-3">
+        <div class="col-md-4">
+          <input type="text" class="form-control" placeholder="Model Name" 
+                 [(ngModel)]="modelNameFilter" (keyup.enter)="applyFilters()">
+        </div>
+        <div class="col-md-4">
+          <div class="form-group">
+            <label for="brandFilter">Brand</label>
+            <select id="brandFilter" class="form-control" 
+                    [(ngModel)]="selectedBrandId" (change)="applyFilters()">
+              <option value="">All Brands</option>
+              <option *ngFor="let brand of brands" [value]="brand.id">
+                {{brand.name}}
+              </option>
+            </select>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <input type="number" class="form-control" placeholder="Model Year" 
+                 [(ngModel)]="modelYearFilter" (keyup.enter)="applyFilters()">
+        </div>
+        <div class="col-md-1">
+          <button mat-raised-button color="primary" (click)="applyFilters()">
+            Search
+          </button>
+        </div>
+        <div class="col-md-1">
+          <button mat-raised-button color="warn" (click)="clearFilters()">
+            Clear
+          </button>
+        </div>
+      </div>
+
+      <div class="table-responsive">
+        <table mat-table [dataSource]="dataSource" class="mat-elevation-z8">
+          <!-- Selection Column -->
+          <ng-container matColumnDef="select">
+            <th mat-header-cell *matHeaderCellDef>
+
+              <mat-checkbox (change)="toggleAllSelection($event)"
+                           [checked]="allSelected()"
+                           [indeterminate]="someSelected()">
+              </mat-checkbox>
+            </th>
+            <td mat-cell *matCellDef="let car">
+            <mat-checkbox 
+  [(ngModel)]="car.selected"
+  (ngModelChange)="updateSelectedCars()"> <!-- Update when value changes -->
+</mat-checkbox>
+            </td>
+          </ng-container>
+
+          <!-- Model Name Column -->
+          <ng-container matColumnDef="modelName">
+            <th mat-header-cell *matHeaderCellDef> Model Name </th>
+            <td mat-cell *matCellDef="let car"> {{car.modelName}} </td>
+          </ng-container>
+
+          <!-- Brand Column -->
+          <ng-container matColumnDef="brand">
+            <th mat-header-cell *matHeaderCellDef> Brand </th>
+            <td mat-cell *matCellDef="let car"> {{car.brand}} </td>
+          </ng-container>
+
+          <!-- Model Type Column -->
+          <ng-container matColumnDef="modelType">
+            <th mat-header-cell *matHeaderCellDef> Type </th>
+            <td mat-cell *matCellDef="let car"> {{car.modelType}} </td>
+          </ng-container>
+
+          <!-- Model Year Column -->
+          <ng-container matColumnDef="modelYear">
+            <th mat-header-cell *matHeaderCellDef> Year </th>
+            <td mat-cell *matCellDef="let car"> {{car.modelYear}} </td>
+          </ng-container>
+
+          <!-- Power Column -->
+          <ng-container matColumnDef="power">
+            <th mat-header-cell *matHeaderCellDef> Power (HP) </th>
+            <td mat-cell *matCellDef="let car"> {{car.power}} </td>
+          </ng-container>
+
+          <!-- Available Count Column -->
+          <ng-container matColumnDef="availableCount">
+            <th mat-header-cell *matHeaderCellDef> Available </th>
+            <td mat-cell *matCellDef="let car"> {{car.availableCount}} </td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="displayedColumnsWithSelect"></tr>
+          <tr mat-row *matRowDef="let row; columns: displayedColumnsWithSelect;"
+              [class.selected]="row.selected">
+          </tr>
+        </table>
+      </div>
+
+      <mat-paginator [length]="totalCount" [pageSize]="pageSize" [pageSizeOptions]="[5, 10, 25, 100]"
+                     (page)="onPageChange($event)" showFirstLastButtons>
+      </mat-paginator>
+    </div>
+  </div>
 </div>
