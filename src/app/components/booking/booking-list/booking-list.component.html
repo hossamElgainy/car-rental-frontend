@@ -1,0 +1,84 @@
+<!-- src/app/components/booking/booking-list/booking-list.component.html -->
+<div class="container mt-4">
+  <div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+      <h2>Bookings</h2>
+      <button class="btn btn-primary" (click)="createNew()">New Booking</button>
+    </div>
+    <div class="card-body">
+      <div class="row mb-3">
+        <div class="col-md-3">
+          <input type="text" class="form-control" placeholder="Model Name" 
+                 [(ngModel)]="modelNameFilter" (keyup.enter)="applyFilters()">
+        </div>
+        <div class="col-md-3">
+          <input type="text" class="form-control" placeholder="Customer Name" 
+                 [(ngModel)]="customerNameFilter" (keyup.enter)="applyFilters()">
+        </div>
+        <div class="col-md-2">
+          <input type="date" class="form-control" placeholder="From Date" 
+                 [(ngModel)]="fromFilter" (change)="applyFilters()">
+        </div>
+        <div class="col-md-2">
+          <input type="date" class="form-control" placeholder="To Date" 
+                 [(ngModel)]="toFilter" (change)="applyFilters()">
+        </div>
+        <div class="col-md-2">
+          <button class="btn btn-primary me-2" (click)="applyFilters()">Search</button>
+          <button class="btn btn-secondary" (click)="clearFilters()">Clear</button>
+        </div>
+      </div>
+
+      <div class="table-responsive">
+        <table mat-table [dataSource]="dataSource" class="mat-elevation-z8">
+          <!-- Booked At Column -->
+          <ng-container matColumnDef="bookedAt">
+            <th mat-header-cell *matHeaderCellDef> Booked At </th>
+            <td mat-cell *matCellDef="let booking"> {{booking.bookedAt | date:'medium'}} </td>
+          </ng-container>
+
+          <!-- Customer Name Column -->
+          <ng-container matColumnDef="customerName">
+            <th mat-header-cell *matHeaderCellDef> Customer Name </th>
+            <td mat-cell *matCellDef="let booking"> {{booking.customerName}} </td>
+          </ng-container>
+
+          <!-- Customer Nationality Column -->
+          <ng-container matColumnDef="customerNationality">
+            <th mat-header-cell *matHeaderCellDef> Nationality </th>
+            <td mat-cell *matCellDef="let booking"> {{booking.customerNationality}} </td>
+          </ng-container>
+
+          <!-- From Date Column -->
+          <ng-container matColumnDef="from">
+            <th mat-header-cell *matHeaderCellDef> From </th>
+            <td mat-cell *matCellDef="let booking"> {{booking.from | date:'short'}} </td>
+          </ng-container>
+
+          <!-- To Date Column -->
+          <ng-container matColumnDef="to">
+            <th mat-header-cell *matHeaderCellDef> To </th>
+            <td mat-cell *matCellDef="let booking"> {{booking.to | date:'short'}} </td>
+          </ng-container>
+
+          <!-- Actions Column -->
+          <ng-container matColumnDef="actions">
+            <th mat-header-cell *matHeaderCellDef> Actions </th>
+            <td mat-cell *matCellDef="let booking">
+                <button class="btn btn-success" (click)="viewDetails(booking.id)">Details</button>
+
+              
+            </td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+        </table>
+      </div>
+
+      <mat-paginator [length]="totalCount" [pageSize]="pageSize" [pageSizeOptions]="[5, 10, 25, 100]"
+                     (page)="onPageChange($event)" showFirstLastButtons>
+      </mat-paginator>
+    </div>
+  </div>
+</div>

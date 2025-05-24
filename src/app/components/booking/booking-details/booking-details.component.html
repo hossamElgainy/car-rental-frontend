@@ -1,0 +1,49 @@
+<!-- src/app/components/booking/booking-details/booking-details.component.html -->
+<div class="container mt-4">
+  <div *ngIf="isLoading" class="text-center">
+    <div class="spinner-border text-primary" role="status">
+      <span class="visually-hidden">Loading...</span>
+    </div>
+  </div>
+
+  <div *ngIf="!isLoading && booking" class="card">
+    <div class="card-header">
+      <h2>Booking Details</h2>
+    </div>
+    <div class="card-body">
+      <div class="row mb-4">
+        <div class="col-md-6">
+          <h5>Customer Information</h5>
+          <p><strong>Name:</strong> {{booking.customerName}}</p>
+          <p><strong>Nationality:</strong> {{booking.customerNationality}}</p>
+          <p><strong>Driving License No.:</strong> {{booking.customerDrivingLicense}}</p>
+          <p><strong>Advanced Payment:</strong> {{booking.payment}}</p>
+        </div>
+        <div class="col-md-6">
+          <h5>Booking Information</h5>
+          <p><strong>Booked At:</strong> {{booking.bookedAt | date:'medium'}}</p>
+          <p><strong>From:</strong> {{booking.from | date:'medium'}}</p>
+          <p><strong>To:</strong> {{booking.to | date:'medium'}}</p>
+        </div>
+      </div>
+
+      <h5 class="mt-4">Booked Cars</h5>
+      <div class="table-responsive">
+        <table class="table table-striped">
+          <thead>
+            <tr>
+              <th>Car Model</th>
+              <th>Quantity</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let carBooking of booking.carBookings">
+              <td>{{carBooking.carName}}</td>
+              <td>{{carBooking.quentity}}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
