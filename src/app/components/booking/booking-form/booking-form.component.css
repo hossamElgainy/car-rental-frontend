@@ -6,3 +6,17 @@ select.form-control {
   color: #666;
   font-style: italic;
 }
+.input-group-text {
+  background-color: #f8f9fa;
+  border-left: 0;
+  border-right: 0;
+}
+
+.input-group input[type="datetime-local"] {
+  position: relative;
+  z-index: 2;
+}
+
+.ng-invalid:not(form) {
+  border-color: #dc3545;
+}

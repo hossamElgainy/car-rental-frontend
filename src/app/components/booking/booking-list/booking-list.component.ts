@@ -10,6 +10,7 @@ import { FormsModule } from '@angular/forms';
 import { Booking } from '../../../models/booking';
 import { BookingService } from '../../../services/booking.service';
 import { Router } from '@angular/router';
+import { LocaleService } from 'ngx-daterangepicker-material';
 
 @Component({
   standalone: true,
@@ -23,6 +24,7 @@ import { Router } from '@angular/router';
     FormsModule,
     DatePipe
   ],
+    providers: [LocaleService],
   selector: 'app-booking-list',
   templateUrl: './booking-list.component.html',
 
